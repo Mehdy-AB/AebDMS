@@ -5,6 +5,6 @@ import org.springframework.data.elasticsearch.repository.ElasticsearchRepository
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface FolderDocumentRepository extends ElasticsearchRepository<FolderElastic, String> {
+public interface FolderDocumentRepository extends ElasticsearchRepository<FolderElastic, Long> {
     // Add custom Elasticsearch queries here
 }

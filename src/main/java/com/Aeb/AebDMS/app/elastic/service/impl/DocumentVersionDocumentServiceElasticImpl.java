@@ -1,7 +1,6 @@
 package com.Aeb.AebDMS.app.elastic.service.impl;
 
 import com.Aeb.AebDMS.app.elastic.model.DocumentVersionDocumentElastic;
-import com.Aeb.AebDMS.app.elastic.model.FolderElastic;
 import com.Aeb.AebDMS.app.elastic.service.IDocumentVersionDocumentServiceElastic;
 import com.Aeb.AebDMS.app.elastic.repository.DocumentVersionDocumentRepository;
 import org.springframework.data.domain.Page;
@@ -35,7 +34,7 @@ public class DocumentVersionDocumentServiceElasticImpl implements IDocumentVersi
     }
 
     @Override
-    public Optional<DocumentVersionDocumentElastic> findById(String id) {
+    public Optional<DocumentVersionDocumentElastic> findById(Long id) {
         return documentversiondocumentRepository.findById(id);
     }
 
@@ -52,21 +51,19 @@ public class DocumentVersionDocumentServiceElasticImpl implements IDocumentVersi
     }
 
     @Override
-    public void deleteById(String id) {
+    public void deleteById(Long id) {
         documentversiondocumentRepository.deleteById(id);
     }
 
-
-
     @Override
     public void deleteByIds(Set<Long> toDeleteEsDocIds) {
-        documentversiondocumentRepository.deleteAllById(toDeleteEsDocIds.stream().map(Object::toString).toList());
+        documentversiondocumentRepository.deleteAllById(toDeleteEsDocIds.stream().toList());
     }
 
     @Override
     public void removeGrantedIdsFromDocs(Set<String> userIdSet, Set<Long> toRemoveGrantFromDocs) {
         toRemoveGrantFromDocs.forEach(id -> {
-            documentversiondocumentRepository.findById(id.toString()).ifPresent(doc -> {
+            documentversiondocumentRepository.findById(id).ifPresent(doc -> {
                 doc.setGrantedIds(doc.getGrantedIds().stream()
                         .filter(g -> !userIdSet.contains(g))
                         .toList());

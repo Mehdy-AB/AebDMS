@@ -8,6 +8,7 @@ import java.util.List;
 
 @Data
 public class FilingCategoryRequestDto {
+
     @NotBlank
     private String name;
 

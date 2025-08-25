@@ -10,6 +10,7 @@ import com.Aeb.AebDMS.app.folders.dto.req.FolderPermissionReq;
 import com.Aeb.AebDMS.app.folders.dto.req.TypeShareAcces;
 import com.Aeb.AebDMS.app.elastic.model.FolderElastic;
 import com.Aeb.AebDMS.app.elastic.service.IFolderElasticService;
+import com.Aeb.AebDMS.app.folders.dto.res.GetSharedFolderResApp;
 import com.Aeb.AebDMS.app.folders.dto.res.TypeShareAccessRes;
 import com.Aeb.AebDMS.app.folders.model.Folder;
 import com.Aeb.AebDMS.app.folders.model.FolderClosure;
@@ -29,11 +30,7 @@ import com.Aeb.AebDMS.shared.util.PermissionChecker;
 import com.Aeb.AebDMS.shared.util.Permissions;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -130,9 +127,7 @@ public class FolderServiceImpl implements IFolderService {
                 .forEach(inheritedCopy::add);
 
         Folder finalFolder = folder;
-        dto.getSubgroups().forEach(subgroup -> {
-            buildFolder(subgroup, createdBy, inheritedCopy, finalFolder);
-        });
+        dto.getSubgroups().forEach(subgroup -> buildFolder(subgroup, createdBy, inheritedCopy, finalFolder));
 
         return folder;
     }
@@ -203,20 +198,42 @@ public class FolderServiceImpl implements IFolderService {
     }
 
     @Override
-    public Page<FolderWithCountDto> getMyRepo( String userId, Pageable pageable) {
-        return folderRepo.getMyRepo(userId,pageable);
+    public Page<FolderWithCountDto> getMyRepo(String userId, Pageable pageable, String name) {
+       if(name!=null&&!name.isEmpty())
+           return folderRepo.getMyRepo(userId,pageable);
+       return folderRepo.getMyRepoByName(userId,name,pageable);
     }
 
     @Override
-    public FolderGetResApp getFullFolder(Long id, String userId, Pageable pageable) {
+    public FolderGetResApp getFullFolder(Long id, String userId, Pageable pageable, String name,Boolean showFolders) {
 
         Folder folder = findById(id, userId,true);
+        return restGetFullFolder(folder,userId,pageable,name,showFolders);
+    }
+
+    @Override
+    public FolderGetResApp getFullFolder(String path, String userId, Pageable pageable, String name,Boolean showFolders) {
+
+        Folder folder = folderRepo.findByPathAndDeletedAtIsNull(path).orElseThrow(()-> new BaseException("folder not fund", HttpStatus.NOT_FOUND));
+        if(!haveAccessRead(folder,userId))
+            throw new BaseException("Access denied",HttpStatus.FORBIDDEN);
+
+        return restGetFullFolder(folder,userId,pageable,name,showFolders);
+    }
+
+    public FolderGetResApp restGetFullFolder(Folder folder, String userId, Pageable pageable, String name,Boolean showFolders) {
         // 1) fetch folders page with the requested pageable
-        Page<FolderWithCountDto> folderPage = folderRepo.getFolderContent(folder.getId(),pageable);
+        Page<FolderWithCountDto> folderPage = null;
+        if(showFolders){
+            if (name != null && !name.isEmpty())
+                folderPage = folderRepo.getFolderContent(folder.getId(), pageable);
+            else
+                folderPage = folderRepo.getFolderContentByName(folder.getId(), name, pageable);
+        }
 
         int pageSize = pageable.getPageSize();
         int pageNumber = pageable.getPageNumber();
-        long folderTotal = folderPage.getTotalElements();
+        long folderTotal =folderPage!=null? folderPage.getTotalElements():0;
 
         // global start index for this merged page
         long startIndex = (long) pageNumber * pageSize;
@@ -225,27 +242,34 @@ public class FolderServiceImpl implements IFolderService {
         long docGlobalOffset = Math.max(0L, startIndex - folderTotal);
 
         Page<DocumentVersion> docPage = null;
-        long totalDocElements = 0L;
+        long totalDocElements;
         int docInnerOffset = 0;
 
         // If folder page didn't fill the requested page, fetch docs slice; otherwise fetch a tiny page to get count
-        if (folderPage.getNumberOfElements() < pageSize) {
+        if (folderTotal < pageSize) {
             // compute doc page number & inner offset
             int docPageNumber = pageSize == 0 ? 0 : (int) (docGlobalOffset / pageSize);
             docInnerOffset = pageSize == 0 ? 0 : (int) (docGlobalOffset % pageSize);
 
             Pageable docPageable = PageRequest.of(docPageNumber, pageSize, pageable.getSort());
-            docPage = documentRepository.getLatestDocumentVersionsByFolderId(folder.getId(), docPageable);
+            if(name!=null&&!name.isEmpty())
+                docPage = documentRepository.getLatestDocumentVersionsByFolderId(folder.getId(), docPageable);
+            else
+                docPage = documentRepository.getLatestDocumentVersionsByFolderIdByName(folder.getId(),name, docPageable);
+
             totalDocElements = docPage.getTotalElements();
         } else {
             // folders fill the page: we still need total number of docs to compute totals
-            Page<DocumentVersion> tmp = documentRepository.getLatestDocumentVersionsByFolderId(folder.getId(), PageRequest.of(0, 1));
+            Page<DocumentVersion> tmp;
+            if(name!=null&&!name.isEmpty())
+                tmp = documentRepository.getLatestDocumentVersionsByFolderId(folder.getId(), PageRequest.of(0, 1));
+            else
+                tmp = documentRepository.getLatestDocumentVersionsByFolderIdByName(folder.getId(),name, PageRequest.of(0, 1));
             totalDocElements = tmp.getTotalElements();
         }
 
         return buildFolderGetResApp(folder, folderPage, docPage, pageable, docInnerOffset, totalDocElements);
     }
-
 
     private FolderGetResApp buildFolderGetResApp(
             Folder folder,
@@ -258,7 +282,7 @@ public class FolderServiceImpl implements IFolderService {
         int pageSize = requestedPageable.getPageSize();
         int pageNumber = requestedPageable.getPageNumber();
 
-        List<FolderWithCountDto> foldersContent = folderPage.getContent();
+        List<FolderWithCountDto> foldersContent =folderPage!=null? folderPage.getContent():new ArrayList<>();
         List<DocumentVersion> documentsContent = new ArrayList<>();
 
         int takenFromFolders = foldersContent.size();
@@ -273,7 +297,7 @@ public class FolderServiceImpl implements IFolderService {
                     .toList());
         }
 
-        long totalElements = folderPage.getTotalElements() + totalDocElements;
+        long totalElements = folderPage!=null?folderPage.getTotalElements() + totalDocElements:totalDocElements;
 
         PageMeta meta = new PageMeta(
                 totalElements,
@@ -282,6 +306,92 @@ public class FolderServiceImpl implements IFolderService {
         );
 
         return new FolderGetResApp(folder, foldersContent, documentsContent, meta);
+    }
+
+    @Override
+    public GetSharedFolderResApp getSharedFolders(String userId, Pageable pageable, String name,Boolean showFolders) {
+
+        // 1) fetch folders page with the requested pageable
+        Page<FolderWithCountDto> folderPage =null;
+
+        if(name!=null&&!name.isEmpty())
+            folderPage = folderRepo.findSharedRootFolders(userId,pageable);
+        else
+            folderPage = folderRepo.findSharedRootFoldersByName(userId,name,pageable);
+
+        int pageSize = pageable.getPageSize();
+        int pageNumber = pageable.getPageNumber();
+        long folderTotal = folderPage!=null?folderPage.getTotalElements():0;
+
+        // global start index for this merged page
+        long startIndex = (long) pageNumber * pageSize;
+
+        // how many docs to skip globally before this page
+        long docGlobalOffset = Math.max(0L, startIndex - folderTotal);
+
+        Page<DocumentVersion> docPage = null;
+        long totalDocElements;
+        int docInnerOffset = 0;
+
+        // If folder page didn't fill the requested page, fetch docs slice; otherwise fetch a tiny page to get count
+        if (folderTotal < pageSize) {
+            // compute doc page number & inner offset
+            int docPageNumber = pageSize == 0 ? 0 : (int) (docGlobalOffset / pageSize);
+            docInnerOffset = pageSize == 0 ? 0 : (int) (docGlobalOffset % pageSize);
+
+            Pageable docPageable = PageRequest.of(docPageNumber, pageSize, pageable.getSort());
+            if(name!=null&&!name.isEmpty())
+                docPage = documentRepository.findLatestSharedRootDocuments(userId, docPageable);
+            else
+                docPage = documentRepository.findLatestSharedRootDocumentsByName(userId,name,pageable);
+            totalDocElements = docPage.getTotalElements();
+        } else {
+            // folders fill the page: we still need total number of docs to compute totals
+            Page<DocumentVersion> tmp;
+            if(name!=null&&!name.isEmpty())
+                tmp = documentRepository.findLatestSharedRootDocuments(userId, PageRequest.of(0, 1));
+            else
+                tmp = documentRepository.findLatestSharedRootDocumentsByName(userId,name, PageRequest.of(0, 1));
+            totalDocElements = tmp.getTotalElements();
+        }
+
+        return buildGetSharedFolderResApp( folderPage, docPage, pageable, docInnerOffset, totalDocElements);
+    }
+
+    private GetSharedFolderResApp buildGetSharedFolderResApp(
+            Page<FolderWithCountDto> folderPage,
+            Page<DocumentVersion> docPage,
+            Pageable requestedPageable,
+            int docInnerOffset,                  // where to start inside docPage.getContent()
+            long totalDocElements                 // total number of docs for the query (even if docPage==null)
+    ) {
+        int pageSize = requestedPageable.getPageSize();
+        int pageNumber = requestedPageable.getPageNumber();
+
+        List<FolderWithCountDto> foldersContent = folderPage!=null?folderPage.getContent():new ArrayList<>();
+        List<DocumentVersion> documentsContent = new ArrayList<>();
+
+        int takenFromFolders = foldersContent.size();
+        int remaining = Math.max(0, pageSize - takenFromFolders);
+
+        if (remaining > 0 && docPage != null) {
+            List<DocumentVersion> docs = docPage.getContent();
+            int start = Math.min(docInnerOffset, docs.size());
+            documentsContent.addAll(docs.stream()
+                    .skip(start)
+                    .limit(remaining)
+                    .toList());
+        }
+
+        long totalElements = folderPage!=null?folderPage.getTotalElements() + totalDocElements:totalDocElements;
+
+        PageMeta meta = new PageMeta(
+                totalElements,
+                pageSize,
+                pageNumber
+        );
+
+        return new GetSharedFolderResApp( foldersContent, documentsContent, meta);
     }
 
 

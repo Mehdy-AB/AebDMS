@@ -22,7 +22,6 @@ import com.Aeb.AebDMS.app.folders.repository.FolderRepository;
 import com.Aeb.AebDMS.app.folders.service.IFolderService;
 import com.Aeb.AebDMS.app.user.service.IKeycloakUserService;
 import lombok.RequiredArgsConstructor;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.client.elc.NativeQuery;

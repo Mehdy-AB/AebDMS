@@ -20,13 +20,13 @@ public class ListMetaData {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(nullable = false,unique = true)
     private String name;
     private String description;
 
     private boolean includeOtherValue =false;
 
-    @OneToMany(mappedBy = "listMetaData",fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "listMetaData",fetch = FetchType.EAGER, cascade = CascadeType.ALL ,orphanRemoval = true)
     List<ListMetadataOption> options;
 
     public void addOption(ListMetadataOption option) {

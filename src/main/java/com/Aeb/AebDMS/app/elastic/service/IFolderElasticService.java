@@ -16,13 +16,13 @@ public interface IFolderElasticService {
     
     Page<FolderElastic> findAll(Pageable pageable);
     
-    Optional<FolderElastic> findById(String id);
+    Optional<FolderElastic> findById(Long id);
     
     List<FolderElastic> searchByName(String name);
     
     FolderElastic updateFolderDocument(FolderElastic folderElastic);
     
-    void deleteById(String id);
+    void deleteById(Long id);
 
     void deleteByIds(Set<Long> toDeleteEsFolderIds);
 

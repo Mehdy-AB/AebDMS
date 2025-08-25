@@ -4,6 +4,8 @@ import com.Aeb.AebDMS.app.folders.dto.app.FolderGetResApp;
 import com.Aeb.AebDMS.app.folders.dto.app.FolderWithCountDto;
 import com.Aeb.AebDMS.app.folders.dto.req.CreateFolderDto;
 import com.Aeb.AebDMS.app.folders.dto.req.FolderPermissionReq;
+import com.Aeb.AebDMS.app.folders.dto.req.SortFields;
+import com.Aeb.AebDMS.app.folders.dto.res.GetSharedFolderResApp;
 import com.Aeb.AebDMS.app.folders.dto.res.TypeShareAccessRes;
 import com.Aeb.AebDMS.app.folders.model.Folder;
 import com.Aeb.AebDMS.shared.util.GranteeType;
@@ -21,9 +23,13 @@ public interface IFolderService {
     void reName(Long id, String userId, String name);
     void move(Long id, String userId, Long desId);
 
-    FolderGetResApp getFullFolder(Long id, String userId, Pageable pageable);
 
-    Page<FolderWithCountDto> getMyRepo(String userId, Pageable pageable);
+    Page<FolderWithCountDto> getMyRepo(String userId, Pageable pageable, String name);
+
+    FolderGetResApp getFullFolder(Long id, String userId, Pageable pageable, String name,Boolean showFolders);
+    FolderGetResApp getFullFolder(String path, String userId, Pageable pageable, String name,Boolean showFolders);
+
+    GetSharedFolderResApp getSharedFolders(String userId, Pageable pageable, String name,Boolean showFolders);
 
     Boolean haveAccessRead(Folder folder, String userId);
     void deleteById(Long id,String userId);

@@ -5,6 +5,7 @@ import com.Aeb.AebDMS.app.folders.dto.app.FolderGetResApp;
 import com.Aeb.AebDMS.app.folders.dto.app.FolderWithCountDto;
 import com.Aeb.AebDMS.app.folders.dto.res.FolderResDto;
 import com.Aeb.AebDMS.app.folders.dto.res.FolderRepoResDto;
+import com.Aeb.AebDMS.app.folders.dto.res.GetSharedFolderResApp;
 import com.Aeb.AebDMS.app.folders.model.Folder;
 import com.Aeb.AebDMS.app.folders.repository.FolderRepository;
 import com.Aeb.AebDMS.app.user.dto.UserDto;
@@ -15,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @RequiredArgsConstructor
@@ -53,7 +55,7 @@ public class FolderMapper {
                 .parentId(folder.getFolder().getParentId())
                 .ownedBy(users.get(folder.getFolder().getOwnedBy()))
                 .createdBy(users.get(folder.getFolder().getCreatedBy()))
-                .size((long) folder.getCount())
+                .size(folder.getCount())
                 .isPublic(folder.getFolder().isPublic())
                 .createdAt(folder.getFolder().getCreatedAt())
                 .updatedAt(folder.getFolder().getUpdatedAt())
@@ -76,6 +78,27 @@ public class FolderMapper {
                 .folder(toResponseDto(appRes.getFolder()))
                 .folders(appRes.getFolders().stream().map(folderWithCountDto -> toManyResponseDto(folderWithCountDto,users)).toList())
                 .documents(appRes.getDocuments().stream().map(doc->documentMapper.toDocumentUploadResponseDto(doc,appRes.getFolder().getPath(),users)).toList())
+                .pageable(appRes.getPageable())
+                .build();
+    }
+
+    public FolderRepoResDto toFolderRepoResponse(GetSharedFolderResApp appRes){
+        Set<String> ids = new HashSet<>();
+        appRes.getFolders().forEach(folderWithCountDto -> {
+            ids.add(folderWithCountDto.getFolder().getCreatedBy());
+            ids.add(folderWithCountDto.getFolder().getOwnedBy());
+        });
+        appRes.getDocuments().forEach(d -> {
+            ids.add(d.getDocument().getCreatedBy());
+            ids.add(d.getDocument().getOwnedBy());
+        });
+        Map<String, UserDto> users = keycloakUserService.getUsersByIds(ids);
+        Set<Long> folderids = appRes.getDocuments().stream().map(doc->doc.getDocument().getFolderId()).collect(Collectors.toSet());
+        Map<Long, String> paths = folderRepo.getFoldersIdAndPath(folderids).stream()
+                .collect(Collectors.toMap(r -> (Long) r[0], r -> (String) r[1]));
+        return FolderRepoResDto.builder()
+                .folders(appRes.getFolders().stream().map(folderWithCountDto -> toManyResponseDto(folderWithCountDto,users)).toList())
+                .documents(appRes.getDocuments().stream().map(doc->documentMapper.toDocumentUploadResponseDto(doc,paths,users)).toList())
                 .pageable(appRes.getPageable())
                 .build();
     }

@@ -3,6 +3,7 @@ package com.Aeb.AebDMS.app.documents.repository;
 import com.Aeb.AebDMS.app.documents.model.Document;
 import com.Aeb.AebDMS.app.documents.model.DocumentPermission;
 import com.Aeb.AebDMS.app.documents.model.DocumentVersion;
+import com.Aeb.AebDMS.app.folders.model.Folder;
 import com.Aeb.AebDMS.app.folders.model.FolderPermission;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -142,5 +143,88 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
     Optional<DocumentPermission> getPermissionByGranteeIdAndDocumentId(
             @Param("documentId") Long documentId,
             @Param("granteeId") String granteeId
+    );
+
+    @Query("""
+    SELECT dv
+    FROM DocumentVersion dv
+    JOIN Document d ON dv.documentId = d.id
+    WHERE d.id IN (
+        SELECT dc.documentId
+        FROM DocumentClosure dc
+        JOIN DocumentPermission p ON dc.permissionId = p.id
+        WHERE p.granteeId = :userId
+          AND p.canView = true
+    )
+    AND d.folderId NOT IN (
+        SELECT fc2.folderId
+        FROM FolderClosure fc2
+        JOIN FolderPermission p2 ON fc2.permissionId = p2.id
+        WHERE p2.granteeId = :userId
+          AND p2.canView = true
+    )
+    AND dv.versionNumber = (
+        SELECT MAX(dv2.versionNumber)
+        FROM DocumentVersion dv2
+        WHERE dv2.documentId = d.id
+          AND dv2.document.deletedAt IS NULL
+    )
+    """)
+    Page<DocumentVersion> findLatestSharedRootDocuments(
+            @Param("userId") String userId,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT dv
+    FROM DocumentVersion dv
+    JOIN Document d ON dv.documentId = d.id
+    LEFT JOIN DocumentClosure dc ON dc.documentId = d.id
+    LEFT JOIN DocumentPermission p ON dc.permissionId = p.id
+    WHERE d.folderId = :folderId
+      AND dv.versionNumber = (
+          SELECT MAX(dv2.versionNumber)
+          FROM DocumentVersion dv2
+          WHERE dv2.documentId = d.id
+          AND  dv2.document.deletedAt IS NULL
+      )
+      AND LOWER(d.name) LIKE LOWER(CONCAT(:name, '%'))
+    """)
+    Page<DocumentVersion> getLatestDocumentVersionsByFolderIdByName(
+            @Param("folderId") Long folderId,
+            @Param("name") String name,
+            Pageable pageable
+    );
+
+    @Query("""
+    SELECT dv
+    FROM DocumentVersion dv
+    JOIN Document d ON dv.documentId = d.id
+    WHERE d.id IN (
+        SELECT dc.documentId
+        FROM DocumentClosure dc
+        JOIN DocumentPermission p ON dc.permissionId = p.id
+        WHERE p.granteeId = :userId
+          AND p.canView = true
+    )
+    AND d.folderId NOT IN (
+        SELECT fc2.folderId
+        FROM FolderClosure fc2
+        JOIN FolderPermission p2 ON fc2.permissionId = p2.id
+        WHERE p2.granteeId = :userId
+          AND p2.canView = true
+    )
+    AND dv.versionNumber = (
+        SELECT MAX(dv2.versionNumber)
+        FROM DocumentVersion dv2
+        WHERE dv2.documentId = d.id
+          AND dv2.document.deletedAt IS NULL
+    )
+    AND LOWER(d.name) LIKE LOWER(CONCAT(:name, '%'))
+    """)
+    Page<DocumentVersion> findLatestSharedRootDocumentsByName(
+            @Param("userId") String userId,
+            @Param("name") String name,
+            Pageable pageable
     );
 }

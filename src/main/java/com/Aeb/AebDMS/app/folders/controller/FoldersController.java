@@ -3,9 +3,11 @@ package com.Aeb.AebDMS.app.folders.controller;
 import com.Aeb.AebDMS.app.folders.dto.app.FolderGetResApp;
 import com.Aeb.AebDMS.app.folders.dto.app.FolderWithCountDto;
 import com.Aeb.AebDMS.app.folders.dto.req.CreateFolderDto;
+import com.Aeb.AebDMS.app.folders.dto.req.SortFields;
 import com.Aeb.AebDMS.app.folders.dto.req.TypeShareAccessWithTypeReq;
 import com.Aeb.AebDMS.app.folders.dto.res.FolderResDto;
 import com.Aeb.AebDMS.app.folders.dto.res.FolderRepoResDto;
+import com.Aeb.AebDMS.app.folders.dto.res.GetSharedFolderResApp;
 import com.Aeb.AebDMS.app.folders.dto.res.TypeShareAccessRes;
 import com.Aeb.AebDMS.app.folders.mapper.FolderMapper;
 import com.Aeb.AebDMS.app.folders.model.Folder;
@@ -14,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,23 +44,82 @@ public class FoldersController {
 
     @GetMapping("/{id}")
     public ResponseEntity<FolderRepoResDto> getFolder(@AuthenticationPrincipal Jwt jwt, @NonNull @PathVariable("id") Long id,
-                                                      @RequestParam(value = "page",defaultValue = "0") Integer page, @RequestParam(value = "size",defaultValue = "20") Integer size) {
+                                                      @RequestParam(value = "page",defaultValue = "0") Integer page,
+                                                      @RequestParam(value = "size",defaultValue = "20") Integer size,
+                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "showFolder",defaultValue = "true") Boolean showFolder,
+                                                      @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
+                                                      @RequestParam(value = "sort",defaultValue = "name") SortFields sort) {
 
-        FolderGetResApp folder = folderService.getFullFolder(id,jwt.getSubject(), PageRequest.of(page, size));
+        Sort.Direction direction = desc ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sortOrder=Sort.by(direction, sort.name());
+        FolderGetResApp folder = folderService.getFullFolder(id,jwt.getSubject(), PageRequest.of(page, size,sortOrder),name,showFolder);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 folderMapper.toFolderRepoResponse(folder)
         );
     }
 
+    @GetMapping("/path")
+    public ResponseEntity<FolderRepoResDto> getFolderByPath(@AuthenticationPrincipal Jwt jwt,
+                                                      @RequestParam(value = "page",defaultValue = "0") Integer page,
+                                                      @RequestParam(value = "size",defaultValue = "20") Integer size,
+                                                      @RequestParam(value = "path",required = true) String path,
+                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "showFolder",defaultValue = "true") Boolean showFolder,
+                                                      @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
+                                                      @RequestParam(value = "sort",defaultValue = "name") SortFields sort) {
+
+        Sort.Direction direction = desc ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sortOrder=Sort.by(direction, sort.name());
+        FolderGetResApp folder = folderService.getFullFolder(path,jwt.getSubject(), PageRequest.of(page, size,sortOrder),name,showFolder);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                folderMapper.toFolderRepoResponse(folder)
+        );
+    }
+
+
     @GetMapping()
     public ResponseEntity<Page<FolderResDto>> getRepo(@AuthenticationPrincipal Jwt jwt,
-                                                    @RequestParam(value = "page",defaultValue = "0") Integer page, @RequestParam(value = "size",defaultValue = "20") Integer size) {
+                                                      @RequestParam(value = "page",defaultValue = "0") Integer page,
+                                                      @RequestParam(value = "size",defaultValue = "20") Integer size,
+                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
+                                                      @RequestParam(value = "sort",defaultValue = "name") SortFields sort
 
-        Page<FolderWithCountDto> folder = folderService.getMyRepo(jwt.getSubject(), PageRequest.of(page, size));
+    ) {
+
+        Sort.Direction direction = desc ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sortOrder=Sort.by(direction, sort.name());
+
+        Page<FolderWithCountDto> folder = folderService.getMyRepo(
+                jwt.getSubject(),
+                PageRequest.of(page, size,sortOrder),
+                name
+        );
 
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 folderMapper.toMyRepoResponse(folder)
+        );
+    }
+
+    @GetMapping("/shared")
+    public ResponseEntity<FolderRepoResDto> getShared(@AuthenticationPrincipal Jwt jwt,
+                                                      @RequestParam(value = "page",defaultValue = "0") Integer page,
+                                                      @RequestParam(value = "size",defaultValue = "20") Integer size,
+                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "showFolder",defaultValue = "true") Boolean showFolder,
+                                                      @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
+                                                      @RequestParam(value = "sort",defaultValue = "name") SortFields sort) {
+
+        Sort.Direction direction = desc ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Sort sortOrder=Sort.by(direction, sort.name());
+
+        GetSharedFolderResApp folder = folderService.getSharedFolders(jwt.getSubject(), PageRequest.of(page, size,sortOrder),name,showFolder);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                folderMapper.toFolderRepoResponse(folder)
         );
     }
 

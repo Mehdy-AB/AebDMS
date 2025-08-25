@@ -8,10 +8,10 @@ import lombok.Data;
 @AllArgsConstructor
 public class FolderWithCountDto {
     private Folder folder;
-    private Long countFolders;
-    private Long countDocuments;
+    private int countFolders;
+    private int countDocuments;
 
     public Long getCount(){
-        return countDocuments+countFolders;
+        return (long) (countDocuments+countFolders);
     }
 }

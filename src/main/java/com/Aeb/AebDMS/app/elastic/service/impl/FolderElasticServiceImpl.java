@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 @Service
@@ -36,7 +35,7 @@ public class FolderElasticServiceImpl implements IFolderElasticService {
     }
 
     @Override
-    public Optional<FolderElastic> findById(String id) {
+    public Optional<FolderElastic> findById(Long id) {
         return folderdocumentRepository.findById(id);
     }
 
@@ -53,20 +52,20 @@ public class FolderElasticServiceImpl implements IFolderElasticService {
     }
 
     @Override
-    public void deleteById(String id) {
+    public void deleteById(Long id) {
         folderdocumentRepository.deleteById(id);
     }
 
 
     @Override
     public void deleteByIds(Set<Long> toDeleteEsFolderIds) {
-        folderdocumentRepository.deleteAllById(toDeleteEsFolderIds.stream().map(Object::toString).toList());
+        folderdocumentRepository.deleteAllById(toDeleteEsFolderIds.stream().toList());
     }
 
     @Override
     public void removeGrantedIdsFromDocs(Set<String> userIdSet, Set<Long> toRemoveGrantFromFolders) {
         toRemoveGrantFromFolders.forEach(id -> {
-            folderdocumentRepository.findById(id.toString()).ifPresent(doc -> {
+            folderdocumentRepository.findById(id).ifPresent(doc -> {
                 doc.setGrantedIds(doc.getGrantedIds().stream()
                         .filter(g -> !userIdSet.contains(g))
                         .toList());

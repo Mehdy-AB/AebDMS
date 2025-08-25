@@ -4,6 +4,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.Aeb.AebDMS.app.documents.model.Document;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.CreationTimestamp;
@@ -61,6 +62,9 @@ public class Folder {
     // Sub-folders
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Folder> subFolders = new ArrayList<>();
+
+    @OneToMany(mappedBy = "documents", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Document> documents = new ArrayList<>();
 
     @Column(name = "created_by", nullable = false, length = 36)
     private String createdBy;

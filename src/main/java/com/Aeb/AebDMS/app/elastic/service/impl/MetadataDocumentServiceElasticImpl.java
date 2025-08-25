@@ -1,7 +1,6 @@
 package com.Aeb.AebDMS.app.elastic.service.impl;
 
 import com.Aeb.AebDMS.app.documents.dto.MetadataTransferee;
-import com.Aeb.AebDMS.app.elastic.model.FolderElastic;
 import com.Aeb.AebDMS.app.elastic.model.MetadataDocumentElastic;
 import com.Aeb.AebDMS.app.elastic.repository.MetadataDocumentRepository;
 import com.Aeb.AebDMS.app.elastic.service.IMetadataDocumentServiceElastic;

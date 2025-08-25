@@ -1,4 +1,4 @@
-package com.Aeb.AebDMS.app.filing_categories.dto.req;
+package com.Aeb.AebDMS.app.filing_categories.dto.res;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,18 +10,14 @@ import java.util.List;
 
 @Data
 @Builder
-public class MetaDataListReq {
+public class MetaDataListRes {
     private Long id;
 
-    @NotBlank
     private String name;
 
     private String description;
 
-    @NotNull
     private boolean mandatory;
 
-    @NotNull
-    @Size(min = 1)
     private List<String> option;
 }

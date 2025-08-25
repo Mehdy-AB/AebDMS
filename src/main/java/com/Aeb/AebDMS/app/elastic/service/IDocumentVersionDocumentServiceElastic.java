@@ -16,13 +16,13 @@ public interface IDocumentVersionDocumentServiceElastic {
     
     Page<DocumentVersionDocumentElastic> findAll(Pageable pageable);
     
-    Optional<DocumentVersionDocumentElastic> findById(String id);
+    Optional<DocumentVersionDocumentElastic> findById(Long id);
     
     List<DocumentVersionDocumentElastic> searchByName(String name);
     
     DocumentVersionDocumentElastic updateDocumentVersionDocument(DocumentVersionDocumentElastic documentVersionDocument);
     
-    void deleteById(String id);
+    void deleteById(Long id);
 
     void deleteByIds(Set<Long> toDeleteEsDocIds);
 
