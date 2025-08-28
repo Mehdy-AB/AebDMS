@@ -23,6 +23,10 @@ public interface DocumentVersionRepository extends JpaRepository<DocumentVersion
     """)
     List<DocumentVersion> findLatestVersionsByDocumentIds(@Param("docIds") List<Long> docIds);
 
+    Optional<DocumentVersion> findLatestVersionsByDocumentId(Long docIds);
+
+    Optional<DocumentVersion> findVersionsByDocumentIdAndVersionNumber(Long documentId, Long versionNumber);
+
     Optional<DocumentVersion> findFirstByDocumentIdAndDocumentDeletedAtIsNullOrderByVersionNumberDesc(Long objectId);
 
 }

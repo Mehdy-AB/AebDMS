@@ -43,9 +43,10 @@ public class FilingCategoryController {
 
     @GetMapping
     public Page<FilingCategoryResponseDto> getAll(
+            @RequestParam(value = "name",required = false) String name,
             @RequestParam(value = "page",defaultValue = "0") Integer page, @RequestParam(value = "size",defaultValue = "20") Integer size
     ) {
-        return service.findAll(PageRequest.of(page,size)).map(mapper::toFilingCategoryDto);
+        return service.findAll(name,PageRequest.of(page,size)).map(mapper::toFilingCategoryDto);
     }
 
     @GetMapping("/{id}")

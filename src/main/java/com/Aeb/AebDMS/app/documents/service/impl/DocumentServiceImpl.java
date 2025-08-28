@@ -17,8 +17,6 @@ import com.Aeb.AebDMS.app.filing_categories.model.*;
 import com.Aeb.AebDMS.app.filing_categories.repository.FilingCategoryRepository;
 import com.Aeb.AebDMS.app.filing_categories.repository.MetadataRepository;
 import com.Aeb.AebDMS.app.folders.model.Folder;
-import com.Aeb.AebDMS.app.folders.model.FolderPermission;
-import com.Aeb.AebDMS.app.folders.model.FolderPermissionId;
 import com.Aeb.AebDMS.app.folders.repository.FolderClosureRepository;
 import com.Aeb.AebDMS.app.folders.repository.FolderRepository;
 import com.Aeb.AebDMS.app.folders.service.IFolderService;
@@ -27,6 +25,7 @@ import com.Aeb.AebDMS.app.user.dto.RoleDto;
 import com.Aeb.AebDMS.app.user.dto.UserDto;
 import com.Aeb.AebDMS.app.user.service.IKeycloakUserService;
 import com.Aeb.AebDMS.shared.util.*;
+import com.Aeb.AebDMS.shared.util.MinIo.AsyncIndexingService;
 import com.Aeb.AebDMS.shared.util.MinIo.MinioService;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
@@ -37,6 +36,7 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.print.Doc;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -64,6 +64,22 @@ public class DocumentServiceImpl implements IDocumentService {
     private final IFolderService folderService;
     private final DocumentPermissionRepository documentPermissionRepository;
     private final DocumentClosureRepository documentClosureRepository;
+
+    @Override
+    public String download(Long documentId, String userId, Long version) {
+        DocumentVersion documentVersion;
+        if (version == null)
+            documentVersion = documentVersionRepository.findLatestVersionsByDocumentId(documentId).orElseThrow(()->
+                    new BaseException("document not found",HttpStatus.NOT_FOUND));
+        else
+            documentVersion =documentVersionRepository.findVersionsByDocumentIdAndVersionNumber(documentId,version).orElseThrow(()->
+                    new BaseException("document not found",HttpStatus.NOT_FOUND));
+
+        if(!canRead(documentVersion.getDocument().getFolder(),userId,documentId))
+            throw new BaseException("Access denied",HttpStatus.FORBIDDEN);
+
+        return minioService.getObjectUrl(documentVersion.getMinioKey());
+    }
 
     @Override
     @Transactional
@@ -110,17 +126,24 @@ public class DocumentServiceImpl implements IDocumentService {
 
         metadataRepository.saveAll(metadataList);
 
+        String extension = "";
+        if ( originalFilename.contains(".")) {
+            extension = originalFilename.substring(originalFilename.lastIndexOf(".") + 1);
+        }
+
+        String uploadedFile = minioService.upload(file,extension);
+
         // Create DocumentVersion
         DocumentVersion version = DocumentVersion.builder()
                 .document(document)
                 .sizeBytes(size)
+                .minioKey(uploadedFile)
                 .mimeType(mimeType)
                 .versionNumber(1L)
                 .build();
 
         version = documentVersionRepository.save(version);
 
-        String uploadedFile = minioService.upload(file,version.getId()+'_'+originalFilename);
 
         asyncIndexingService.processAsyncIndexing(owner,uploadedFile,file.getOriginalFilename(),file.getContentType(),request.getLang(),newCategories,version,folder);
         return version;

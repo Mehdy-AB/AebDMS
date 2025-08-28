@@ -30,7 +30,6 @@ public class DocumentPermission {
     @OneToMany(fetch = FetchType.LAZY,cascade = CascadeType.ALL,mappedBy = "documentPermission")
     private List<DocumentClosure> documentClosures;
 
-    //on folder
     @Column(name = "can_view")
     private boolean canView;
     @Column(name = "can_edit")

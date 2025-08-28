@@ -1,2 +1,4 @@
-package com.Aeb.AebDMS.app.user.controller;public class UserController {
+package com.Aeb.AebDMS.app.user.controller;
+
+public class UserController {
 }

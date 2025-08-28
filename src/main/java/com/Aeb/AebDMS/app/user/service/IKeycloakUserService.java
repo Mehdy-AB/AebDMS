@@ -26,7 +26,7 @@ public interface IKeycloakUserService {
 
     public Optional<GroupDto> getGroupById(String groupId);
 
-    public List<GroupRepresentation> getGroupesByIds(List<String> groupIds);
+   // public List<GroupRepresentation> getGroupesByIds(List<String> groupIds);
 
     public List<Boolean> getGroupersExistingByIds(List<String> groupIds);
 

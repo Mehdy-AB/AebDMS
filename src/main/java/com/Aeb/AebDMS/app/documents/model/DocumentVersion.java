@@ -42,6 +42,9 @@ public class DocumentVersion {
     @Column(name = "version_number", nullable = false)
     private Long versionNumber;
 
+    @Column(name = "minioKey", nullable = false)
+    private String minioKey;
+
     @Column(name = "size_bytes")
     private Long sizeBytes;
 

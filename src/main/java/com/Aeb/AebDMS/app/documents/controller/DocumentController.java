@@ -74,6 +74,18 @@ public class DocumentController {
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 
+    @GetMapping("/download/{id}")
+    public ResponseEntity<Page<TypeShareAccessDocumentRes>> download(@AuthenticationPrincipal Jwt jwt,
+                                                                      @NonNull @PathVariable("id") Long id,
+                                                                      @RequestParam(value = "version",required = false) Long version,
+                                                                      @RequestParam(value = "page",defaultValue = "0") Integer page,
+                                                                      @RequestParam(value = "size",defaultValue = "20") Integer size){
+
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(documentService.getAllPermission(id, jwt.getSubject(), PageRequest.of(page, size)));
+    }
+
     @GetMapping("/{id}/share")
     public ResponseEntity<Page<TypeShareAccessDocumentRes>> getShared(@AuthenticationPrincipal Jwt jwt,
                                                                       @NonNull @PathVariable("id") Long id,

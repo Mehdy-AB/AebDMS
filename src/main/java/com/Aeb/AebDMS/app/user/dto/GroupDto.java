@@ -15,6 +15,7 @@ public class GroupDto {
     String id ;
     String name;
     String description;
+    String path;
 }
 
 

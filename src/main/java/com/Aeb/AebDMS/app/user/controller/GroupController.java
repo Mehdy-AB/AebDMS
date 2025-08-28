@@ -1,2 +1,4 @@
-package com.Aeb.AebDMS.app.user.controller;public class GroupController {
+package com.Aeb.AebDMS.app.user.controller;
+
+public class GroupController {
 }

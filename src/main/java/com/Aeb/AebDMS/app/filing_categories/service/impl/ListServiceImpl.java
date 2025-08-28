@@ -30,7 +30,7 @@ public class ListServiceImpl implements IListService {
     @Override
     public Page<ListMetaData> findAll(String name,Pageable pageable) {
         if(name!=null && !name.isEmpty())
-            return  metaDataListRepository.findAllByNameLike(name,pageable);
+            return  metaDataListRepository.findAllByName(name,pageable);
         return metaDataListRepository.findAll(pageable);
     }
 

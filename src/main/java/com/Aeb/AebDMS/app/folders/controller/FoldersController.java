@@ -46,7 +46,7 @@ public class FoldersController {
     public ResponseEntity<FolderRepoResDto> getFolder(@AuthenticationPrincipal Jwt jwt, @NonNull @PathVariable("id") Long id,
                                                       @RequestParam(value = "page",defaultValue = "0") Integer page,
                                                       @RequestParam(value = "size",defaultValue = "20") Integer size,
-                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "name",required = false) String name,
                                                       @RequestParam(value = "showFolder",defaultValue = "true") Boolean showFolder,
                                                       @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
                                                       @RequestParam(value = "sort",defaultValue = "name") SortFields sort) {
@@ -65,7 +65,7 @@ public class FoldersController {
                                                       @RequestParam(value = "page",defaultValue = "0") Integer page,
                                                       @RequestParam(value = "size",defaultValue = "20") Integer size,
                                                       @RequestParam(value = "path",required = true) String path,
-                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "name",required = false) String name,
                                                       @RequestParam(value = "showFolder",defaultValue = "true") Boolean showFolder,
                                                       @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
                                                       @RequestParam(value = "sort",defaultValue = "name") SortFields sort) {
@@ -84,7 +84,7 @@ public class FoldersController {
     public ResponseEntity<Page<FolderResDto>> getRepo(@AuthenticationPrincipal Jwt jwt,
                                                       @RequestParam(value = "page",defaultValue = "0") Integer page,
                                                       @RequestParam(value = "size",defaultValue = "20") Integer size,
-                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "name",required = false) String name,
                                                       @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
                                                       @RequestParam(value = "sort",defaultValue = "name") SortFields sort
 
@@ -108,7 +108,7 @@ public class FoldersController {
     public ResponseEntity<FolderRepoResDto> getShared(@AuthenticationPrincipal Jwt jwt,
                                                       @RequestParam(value = "page",defaultValue = "0") Integer page,
                                                       @RequestParam(value = "size",defaultValue = "20") Integer size,
-                                                      @RequestParam(value = "name") String name,
+                                                      @RequestParam(value = "name",required = false) String name,
                                                       @RequestParam(value = "showFolder",defaultValue = "true") Boolean showFolder,
                                                       @RequestParam(value = "desc",defaultValue = "true") Boolean desc,
                                                       @RequestParam(value = "sort",defaultValue = "name") SortFields sort) {

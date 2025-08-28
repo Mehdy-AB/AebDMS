@@ -1,4 +1,4 @@
-package com.Aeb.AebDMS.shared.util;
+package com.Aeb.AebDMS.shared.util.MinIo;
 
 import com.Aeb.AebDMS.app.documents.dto.MetadataTransferee;
 import com.Aeb.AebDMS.app.documents.model.DocumentVersion;
@@ -6,7 +6,8 @@ import com.Aeb.AebDMS.app.elastic.model.DocumentVersionDocumentElastic;
 import com.Aeb.AebDMS.app.elastic.model.MetadataDocumentElastic;
 import com.Aeb.AebDMS.app.elastic.service.IDocumentVersionDocumentServiceElastic;
 import com.Aeb.AebDMS.app.folders.model.Folder;
-import com.Aeb.AebDMS.shared.util.MinIo.MinioService;
+import com.Aeb.AebDMS.shared.util.ExtractorLanug;
+import com.Aeb.AebDMS.shared.util.HybridTextExtractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,7 @@ public class AsyncIndexingService {
 
 
     @Async
-    public void processAsyncIndexing(String ownerId,String uploadedFile, String originalFilename, String contentType, ExtractorLanug lang, List<MetadataTransferee> newCategories, DocumentVersion version, Folder folder) {
+    public void processAsyncIndexing(String ownerId, String uploadedFile, String originalFilename, String contentType, ExtractorLanug lang, List<MetadataTransferee> newCategories, DocumentVersion version, Folder folder) {
         try {
             InputStream file = minioService.getObjectStream(uploadedFile);
             String ocrText = textExtraction.extractText(file,originalFilename, contentType, lang);

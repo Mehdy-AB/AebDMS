@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.List;
 
 public interface IDocumentService {
+    String download(Long documentId,String userId,Long version);
 
     DocumentVersion uploadDocument(DocumentUploadRequestDto document, List<FilingCategoryDocDto> filingCategories);
 

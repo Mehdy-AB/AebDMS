@@ -14,6 +14,7 @@ public class CustomGroupRepresentation {
         return GroupDto.builder()
                 .id(delegate.getId())
                 .name(delegate.getName())
+                .path(delegate.getPath())
                 .description(delegate.getDescription())
                 .build();
     }

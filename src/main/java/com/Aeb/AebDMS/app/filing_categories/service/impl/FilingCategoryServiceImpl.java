@@ -24,8 +24,10 @@ public class FilingCategoryServiceImpl implements IFilingCategoryService {
     }
 
     @Override
-    public Page<FilingCategory> findAll(Pageable pageable) {
-        return filingcategoryRepository.findAll(pageable);
+    public Page<FilingCategory> findAll(String name,Pageable pageable) {
+        if(name == null || name.isEmpty())
+            return filingcategoryRepository.findAll(pageable);
+        return filingcategoryRepository.findAllByName(name,pageable);
     }
 
     @Override

@@ -1,2 +1,14 @@
-package com.Aeb.AebDMS.app.user.dto.role;public class RoleCreateReq {
+package com.Aeb.AebDMS.app.user.dto.role;
+
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
+
+import java.util.Set;
+
+@Data
+public class RoleCreateReq {
+    @NotBlank
+    private String name;
+    private String description;
+    private Set<String> permissions; // must match Permissions.*
 }

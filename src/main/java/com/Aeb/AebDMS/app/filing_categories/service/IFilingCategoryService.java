@@ -11,7 +11,7 @@ public interface IFilingCategoryService {
     
     FilingCategory saveFilingCategory(FilingCategory filingcategory);
 
-    Page<FilingCategory> findAll(Pageable pageable);
+    Page<FilingCategory> findAll(String name,Pageable pageable);
     
     FilingCategory findById(Long id);
     

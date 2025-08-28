@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.Instant;
+import java.util.Set;
 
 @Data
 @Builder
@@ -15,6 +16,8 @@ public class RoleDto {
     String id ;
     String name;
     String description;
+    private Set<String> permissions;
+
 }
 
 
